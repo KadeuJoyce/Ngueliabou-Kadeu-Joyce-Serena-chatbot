@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Double Caesar Cipher · Two-Layer Encryption</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #000000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 1300px;
+            height: 95vh;
+            background: #0a0a0a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header with key input */
+        .header {
+            background: #075e54;
+            padding: 16px 24px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .key-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 16px;
+            border-radius: 30px;
+        }
+
+        .key-section label {
+            font-size: 0.8rem;
+        }
+
+        .key-input {
+            background: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            width: 80px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            outline: none;
+        }
+
+        .key-input:focus {
+            outline: 2px solid #25d366;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Two column chat layout */
+        .chat-panels {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 1px;
+            background: #1a1a1a;
+        }
+
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f0f0f;
+        }
+
+        .chat-panel:first-child {
+            border-right: 1px solid #2a2a2a;
+        }
+
+        /* Contact header */
+        .contact-header {
+            background: #1e1e1e;
+            padding: 12px 20px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: #075e54;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .contact-info h3 {
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .contact-info p {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        /* Messages area */
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #0a0a0a;
+        }
+
+        /* Message bubbles */
+        .message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            position: relative;
+            word-wrap: break-word;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .message.sent {
+            background: #075e54;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received {
+            background: #202c33;
+            color: #e9edef;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 0.6rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .encrypted-preview {
+            font-family: monospace;
+            font-size: 0.7rem;
+            margin-top: 4px;
+            opacity: 0.8;
+            word-break: break-all;
+        }
+
+        /* Input area */
+        .input-area {
+            background: #1e1e1e;
+            padding: 12px 16px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .input-area input {
+            flex: 1;
+            background: #2a2a2a;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .input-area input:focus {
+            background: #333;
+        }
+
+        .input-area input::placeholder {
+            color: #888;
+        }
+
+        .input-area button {
+            background: #075e54;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .input-area button:hover {
+            background: #0a6b5f;
+        }
+
+        /* Encryption status bar */
+        .encryption-status {
+            background: #111111;
+            border-top: 1px solid #2a2a2a;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 0.75rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #aaa;
+        }
+
+        .status-item .encrypted {
+            color: #ffd966;
+            font-weight: 500;
+            font-family: monospace;
+        }
+
+        .status-item .decrypted {
+            color: #25d366;
+            font-weight: 500;
+        }
+
+        .key-warning {
+            color: #ffaa66;
+            font-size: 0.7rem;
+        }
+
+        .double-badge {
+            background: #ff9900;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .chat-panels {
+                flex-direction: column;
+            }
+            .message {
+                max-width: 85%;
+            }
+            .key-section {
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <h1>
+            🔐 Double Caesar Cipher · Two-Layer Encryption
+            
+        </h1>
+        <div class="key-section">
+            <label>🔑 First Shift (0-25):</label>
+            <input type="number" id="firstKey" class="key-input" min="0" max="25" value="3">
+            <label style="color:#ffd966;"> Second Shift: 10 (fixed)</label>
+            <button class="reset-btn" id="resetBtn">⟳ Clear Chat</button>
+        </div>
+    </div>
+
+    <div class="chat-panels">
+        <!-- Alice Panel -->
+        <div class="chat-panel">
+            <div class="contact-header">
+                <div class="avatar">👩</div>
+                <div class="contact-info">
+                    <h3>Alice</h3>
+                    <p>Double encryption: First key + Second key (10)</p>
+                </div>
+            </div>
+            <div class="messages-area" id="aliceMessages"></div>
+            <div class="input-area">
+                <input type="text" id="aliceInput" placeholder="Type a message to Bob...">
+                <button id="sendAliceBtn">Send</button>
+            </div>
+        </div>
+
+        <!-- Bob Panel -->
+        <div class="chat-panel">
+            <div class="contact-header">
+                <div class="avatar">👨</div>
+                <div class="contact-info">
+                    <h3>Bob</h3>
+                    <p>Double decryption: Reverse second key (10) then first key</p>
+                </div>
+            </div>
+            <div class="messages-area" id="bobMessages"></div>
+            <div class="input-area">
+                <input type="text" id="bobInput" placeholder="Type a message to Alice...">
+                <button id="sendBobBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Encryption status bar -->
+    <div class="encryption-status">
+        <div class="status-item">
+            <span>🔐</span>
+            <span>Double Cipher:</span>
+            <span class="encrypted" id="keyDisplay">First = 3, Second = 10 (fixed)</span>
+        </div>
+        <div class="status-item">
+            <span>📤</span>
+            <span>Last encrypted (double):</span>
+            <span class="encrypted" id="lastEncrypted">—</span>
+        </div>
+        <div class="status-item">
+            <span>🔓</span>
+            <span>Last decrypted:</span>
+            <span class="decrypted" id="lastDecrypted">—</span>
+        </div>
+        <div class="key-warning" id="keyWarning"></div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // FIXED SECOND SHIFT = 10 (HARDCODED)
+    // This is the predefined shift that never changes
+    // ============================================
+    const SECOND_SHIFT = 10;
+    
+    // Caesar cipher implementation (single layer)
+    function caesarEncrypt(text, shift) {
+        if (!text) return "";
+        
+        shift = shift % 26;  // Ensure shift is between 0-25
+        let result = "";
+        
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            
+            // Encrypt uppercase letters (A-Z)
+            if (char >= 'A' && char <= 'Z') {
+                let encrypted = String.fromCharCode(((char.charCodeAt(0) - 65 + shift) % 26) + 65);
+                result += encrypted;
+            }
+            // Encrypt lowercase letters (a-z)
+            else if (char >= 'a' && char <= 'z') {
+                let encrypted = String.fromCharCode(((char.charCodeAt(0) - 97 + shift) % 26) + 97);
+                result += encrypted;
+            }
+            // Keep non-alphabet characters as is
+            else {
+                result += char;
+            }
+        }
+        
+        return result;
+    }
+    
+    function caesarDecrypt(text, shift) {
+        // Decryption is just encryption with negative shift
+        return caesarEncrypt(text, 26 - (shift % 26));
+    }
+    
+    // ============================================
+    // DOUBLE ENCRYPTION: Apply TWO shifts
+    // First shift: User-defined (0-25)
+    // Second shift: FIXED at 10 (predefined in code)
+    // ============================================
+    function doubleEncrypt(text, firstShift) {
+        // Step 1: Apply first shift (user's key)
+        let afterFirstShift = caesarEncrypt(text, firstShift);
+        
+        // Step 2: Apply second shift (FIXED = 10)
+        let afterSecondShift = caesarEncrypt(afterFirstShift, SECOND_SHIFT);
+        
+        return afterSecondShift;
+    }
+    
+    function doubleDecrypt(text, firstShift) {
+        // Step 1: Reverse second shift (FIXED = 10)
+        let afterReverseSecond = caesarDecrypt(text, SECOND_SHIFT);
+        
+        // Step 2: Reverse first shift (user's key)
+        let afterReverseFirst = caesarDecrypt(afterReverseSecond, firstShift);
+        
+        return afterReverseFirst;
+    }
+    
+    // Get current first shift key from user input
+    function getCurrentFirstKey() {
+        let keyInput = document.getElementById('firstKey');
+        let key = parseInt(keyInput.value);
+        
+        if (isNaN(key)) return 3;      // Default to 3 if not a number
+        if (key < 0) return 0;          // Minimum is 0
+        if (key > 25) return 25;        // Maximum is 25
+        return key;
+    }
+    
+    // Update key display
+    function updateKeyDisplay() {
+        let firstKey = getCurrentFirstKey();
+        document.getElementById('keyDisplay').innerHTML = `First = ${firstKey}, Second = ${SECOND_SHIFT} (fixed) | Total shift = ${(firstKey + SECOND_SHIFT) % 26}`;
+        
+        // Show warning if key changed and messages exist
+        if (messages.length > 0) {
+            let warning = document.getElementById('keyWarning');
+            warning.innerHTML = " First key changed! Old messages were encrypted with previous first key.";
+            setTimeout(() => {
+                if (warning.innerHTML === " First key changed! Old messages were encrypted with previous first key.") {
+                    warning.innerHTML = "";
+                }
+            }, 3000);
+        }
+    }
+    
+    // Message storage
+    let messages = []; // each: { id, from, encrypted, original, time, firstKeyUsed }
+    
+    function getTime() {
+        const now = new Date();
+        return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function sendMessage(from, plaintext) {
+        if (!plaintext.trim()) return false;
+        
+        let firstKey = getCurrentFirstKey();
+        // Apply DOUBLE encryption
+        let encrypted = doubleEncrypt(plaintext.trim(), firstKey);
+        
+        messages.push({
+            id: Date.now(),
+            from: from,
+            encrypted: encrypted,
+            original: plaintext.trim(),
+            time: getTime(),
+            firstKeyUsed: firstKey,
+            secondKeyUsed: SECOND_SHIFT  // Store the fixed key for reference
+        });
+        
+        // Update the encryption status bar
+        updateEncryptionStatus(encrypted, plaintext.trim(), firstKey);
+        
+        renderAll();
+        return true;
+    }
+    
+    function updateEncryptionStatus(encryptedText, decryptedText, firstKey) {
+        let encryptedPreview = encryptedText.length > 35 ? encryptedText.substring(0, 32) + '...' : encryptedText;
+        let decryptedPreview = decryptedText.length > 35 ? decryptedText.substring(0, 32) + '...' : decryptedText;
+        
+        let totalShift = (firstKey + SECOND_SHIFT) % 26;
+        document.getElementById('lastEncrypted').innerHTML = `"${encryptedPreview}" (first:${firstKey} + second:${SECOND_SHIFT} = total shift:${totalShift})`;
+        document.getElementById('lastDecrypted').innerHTML = `"${decryptedPreview}"`;
+    }
+    
+    function resetChat() {
+        messages = [];
+        document.getElementById('lastEncrypted').innerHTML = '—';
+        document.getElementById('lastDecrypted').innerHTML = '—';
+        renderAll();
+    }
+    
+    function renderAll() {
+        renderPanel('alice');
+        renderPanel('bob');
+    }
+    
+    function renderPanel(user) {
+        const container = document.getElementById(`${user}Messages`);
+        if (!container) return;
+        
+        const isAlice = user === 'alice';
+        
+        if (messages.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; color: #666; padding: 40px 20px; font-size: 0.8rem;">
+                    💬 No messages yet<br>
+                    Enter first key (0-25) and start double-encrypted chatting!
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        
+        for (let msg of messages) {
+            const isFromCurrentUser = (isAlice && msg.from === 'alice') || (!isAlice && msg.from === 'bob');
+            const sender = msg.from === 'alice' ? 'Alice' : 'Bob';
+            const currentFirstKey = getCurrentFirstKey();
+            const totalShiftUsed = (msg.firstKeyUsed + SECOND_SHIFT) % 26;
+            
+            if (isFromCurrentUser) {
+                // SENT MESSAGE - Show double-encrypted version
+                let encryptedDisplay = msg.encrypted;
+                if (encryptedDisplay.length > 60) {
+                    encryptedDisplay = encryptedDisplay.substring(0, 57) + '...';
+                }
+                
+                html += `
+                    <div class="message sent">
+                        <div style="font-size: 0.7rem; opacity: 0.8; margin-bottom: 4px;">🔐 You → ${sender}</div>
+                        <div style="font-family: monospace; font-size: 0.8rem; word-break: break-all;">${escapeHtml(encryptedDisplay)}</div>
+                        <div class="encrypted-preview">
+                            🔒 Double encrypted:<br>
+                            • First shift: ${msg.firstKeyUsed}<br>
+                            • Second shift: ${SECOND_SHIFT} (fixed)<br>
+                            • Total shift: ${totalShiftUsed}
+                        </div>
+                        <div class="message-time">${msg.time} • 🔒🔒 Double Caesar</div>
+                    </div>
+                `;
+            } else {
+                // RECEIVED MESSAGE - Show double-decrypted version
+                let decrypted = doubleDecrypt(msg.encrypted, msg.firstKeyUsed);
+                let keyMismatch = (currentFirstKey !== msg.firstKeyUsed);
+                
+                html += `
+                    <div class="message received">
+                        <div style="font-size: 0.7rem; opacity: 0.8; margin-bottom: 4px;">${sender} → You</div>
+                        <div>${escapeHtml(decrypted)}</div>
+                        <div class="encrypted-preview">
+                            🔓 Double decrypted:<br>
+                            • Reverse second shift: ${SECOND_SHIFT}<br>
+                            • Reverse first shift: ${msg.firstKeyUsed}<br>
+                            • Original message restored
+                        </div>
+                        ${keyMismatch ? `<div class="encrypted-preview" style="color: #ffaa66;">⚠️ Current first key (${currentFirstKey}) differs from message's first key (${msg.firstKeyUsed})</div>` : ''}
+                        <div class="message-time">${msg.time} • 🔓🔓 Double Caesar</div>
+                    </div>
+                `;
+            }
+        }
+        
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Initialize event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        const aliceInput = document.getElementById('aliceInput');
+        const bobInput = document.getElementById('bobInput');
+        const sendAlice = document.getElementById('sendAliceBtn');
+        const sendBob = document.getElementById('sendBobBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const keyInput = document.getElementById('firstKey');
+        
+        function sendFromAlice() {
+            if (aliceInput.value.trim()) {
+                sendMessage('alice', aliceInput.value);
+                aliceInput.value = '';
+                aliceInput.focus();
+            }
+        }
+        
+        function sendFromBob() {
+            if (bobInput.value.trim()) {
+                sendMessage('bob', bobInput.value);
+                bobInput.value = '';
+                bobInput.focus();
+            }
+        }
+        
+        sendAlice.addEventListener('click', sendFromAlice);
+        sendBob.addEventListener('click', sendFromBob);
+        resetBtn.addEventListener('click', () => {
+            resetChat();
+            aliceInput.value = '';
+            bobInput.value = '';
+        });
+        
+        aliceInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendFromAlice();
+        });
+        
+        bobInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendFromBob();
+        });
+        
+        keyInput.addEventListener('change', () => {
+            updateKeyDisplay();
+            renderAll(); // Re-render to show key mismatch warnings
+        });
+        
+        // Initial key display
+        updateKeyDisplay();
+        
+        // Demo message with double encryption explanation
+        setTimeout(() => {
+            if (messages.length === 0) {
+                let demoKey = getCurrentFirstKey();
+                let demoMessage = `Hello Bob! This is double-encrypted. First shift: ${demoKey}, Second shift: 10 (fixed)`;
+                sendMessage('alice', demoMessage);
+                setTimeout(() => {
+                    sendMessage('bob', `I received your double-encrypted message! To decrypt, I reverse second shift (10) then reverse first shift (${demoKey}). Pretty secure!`);
+                }, 800);
+            }
+        }, 500);
+    });
+</script>
+</body>
+</html>
