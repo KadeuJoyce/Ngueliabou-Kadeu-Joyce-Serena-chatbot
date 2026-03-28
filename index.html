@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Double Caesar Cipher · Two-Layer Encryption</title>
+    <title>Caesar Cipher · E2E Encrypted Chat</title>
     <style>
         * {
             margin: 0;
@@ -278,15 +278,6 @@
             font-size: 0.7rem;
         }
 
-        .double-badge {
-            background: #ff9900;
-            color: #000;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.65rem;
-            font-weight: bold;
-        }
-
         @media (max-width: 768px) {
             .chat-panels {
                 flex-direction: column;
@@ -304,13 +295,11 @@
 <div class="app">
     <div class="header">
         <h1>
-            🔐 Double Caesar Cipher · Two-Layer Encryption
-            
+            🔐 Caesar Cipher · E2E Encrypted Chat
         </h1>
         <div class="key-section">
-            <label>🔑 First Shift (0-25):</label>
-            <input type="number" id="firstKey" class="key-input" min="0" max="25" value="3">
-            <label style="color:#ffd966;"> Second Shift: 10 (fixed)</label>
+            <label>🔑 Caesar Key (1-25):</label>
+            <input type="number" id="caesarKey" class="key-input" min="1" max="25" value="3">
             <button class="reset-btn" id="resetBtn">⟳ Clear Chat</button>
         </div>
     </div>
@@ -322,7 +311,7 @@
                 <div class="avatar">👩</div>
                 <div class="contact-info">
                     <h3>Alice</h3>
-                    <p>Double encryption: First key + Second key (10)</p>
+                    <p>Enter key to encrypt messages</p>
                 </div>
             </div>
             <div class="messages-area" id="aliceMessages"></div>
@@ -338,7 +327,7 @@
                 <div class="avatar">👨</div>
                 <div class="contact-info">
                     <h3>Bob</h3>
-                    <p>Double decryption: Reverse second key (10) then first key</p>
+                    <p>Enter key to decrypt messages</p>
                 </div>
             </div>
             <div class="messages-area" id="bobMessages"></div>
@@ -353,12 +342,12 @@
     <div class="encryption-status">
         <div class="status-item">
             <span>🔐</span>
-            <span>Double Cipher:</span>
-            <span class="encrypted" id="keyDisplay">First = 3, Second = 10 (fixed)</span>
+            <span>Caesar Cipher:</span>
+            <span class="encrypted" id="keyDisplay">Key = 3</span>
         </div>
         <div class="status-item">
             <span>📤</span>
-            <span>Last encrypted (double):</span>
+            <span>Last encrypted:</span>
             <span class="encrypted" id="lastEncrypted">—</span>
         </div>
         <div class="status-item">
@@ -371,28 +360,22 @@
 </div>
 
 <script>
-    // ============================================
-    // FIXED SECOND SHIFT = 10 (HARDCODED)
-    // This is the predefined shift that never changes
-    // ============================================
-    const SECOND_SHIFT = 10;
-    
-    // Caesar cipher implementation (single layer)
+    // Caesar Cipher Implementation
     function caesarEncrypt(text, shift) {
         if (!text) return "";
         
-        shift = shift % 26;  // Ensure shift is between 0-25
+        shift = shift % 26;
         let result = "";
         
         for (let i = 0; i < text.length; i++) {
             let char = text[i];
             
-            // Encrypt uppercase letters (A-Z)
+            // Encrypt uppercase letters
             if (char >= 'A' && char <= 'Z') {
                 let encrypted = String.fromCharCode(((char.charCodeAt(0) - 65 + shift) % 26) + 65);
                 result += encrypted;
             }
-            // Encrypt lowercase letters (a-z)
+            // Encrypt lowercase letters
             else if (char >= 'a' && char <= 'z') {
                 let encrypted = String.fromCharCode(((char.charCodeAt(0) - 97 + shift) % 26) + 97);
                 result += encrypted;
@@ -411,53 +394,28 @@
         return caesarEncrypt(text, 26 - (shift % 26));
     }
     
-    // ============================================
-    // DOUBLE ENCRYPTION: Apply TWO shifts
-    // First shift: User-defined (0-25)
-    // Second shift: FIXED at 10 (predefined in code)
-    // ============================================
-    function doubleEncrypt(text, firstShift) {
-        // Step 1: Apply first shift (user's key)
-        let afterFirstShift = caesarEncrypt(text, firstShift);
-        
-        // Step 2: Apply second shift (FIXED = 10)
-        let afterSecondShift = caesarEncrypt(afterFirstShift, SECOND_SHIFT);
-        
-        return afterSecondShift;
-    }
-    
-    function doubleDecrypt(text, firstShift) {
-        // Step 1: Reverse second shift (FIXED = 10)
-        let afterReverseSecond = caesarDecrypt(text, SECOND_SHIFT);
-        
-        // Step 2: Reverse first shift (user's key)
-        let afterReverseFirst = caesarDecrypt(afterReverseSecond, firstShift);
-        
-        return afterReverseFirst;
-    }
-    
-    // Get current first shift key from user input
-    function getCurrentFirstKey() {
-        let keyInput = document.getElementById('firstKey');
+    // Get current shift key from input
+    function getCurrentKey() {
+        let keyInput = document.getElementById('caesarKey');
         let key = parseInt(keyInput.value);
         
-        if (isNaN(key)) return 3;      // Default to 3 if not a number
-        if (key < 0) return 0;          // Minimum is 0
-        if (key > 25) return 25;        // Maximum is 25
+        if (isNaN(key)) return 3;
+        if (key < 1) return 1;
+        if (key > 25) return 25;
         return key;
     }
     
     // Update key display
     function updateKeyDisplay() {
-        let firstKey = getCurrentFirstKey();
-        document.getElementById('keyDisplay').innerHTML = `First = ${firstKey}, Second = ${SECOND_SHIFT} (fixed) | Total shift = ${(firstKey + SECOND_SHIFT) % 26}`;
+        let key = getCurrentKey();
+        document.getElementById('keyDisplay').innerHTML = `Key = ${key} (shift ${key} letters)`;
         
         // Show warning if key changed and messages exist
         if (messages.length > 0) {
             let warning = document.getElementById('keyWarning');
-            warning.innerHTML = " First key changed! Old messages were encrypted with previous first key.";
+            warning.innerHTML = "⚠️ Key changed! Old messages were encrypted with previous key.";
             setTimeout(() => {
-                if (warning.innerHTML === " First key changed! Old messages were encrypted with previous first key.") {
+                if (warning.innerHTML === "⚠️ Key changed! Old messages were encrypted with previous key.") {
                     warning.innerHTML = "";
                 }
             }, 3000);
@@ -465,7 +423,7 @@
     }
     
     // Message storage
-    let messages = []; // each: { id, from, encrypted, original, time, firstKeyUsed }
+    let messages = []; // each: { id, from, encrypted, original, time, keyUsed }
     
     function getTime() {
         const now = new Date();
@@ -475,9 +433,8 @@
     function sendMessage(from, plaintext) {
         if (!plaintext.trim()) return false;
         
-        let firstKey = getCurrentFirstKey();
-        // Apply DOUBLE encryption
-        let encrypted = doubleEncrypt(plaintext.trim(), firstKey);
+        let currentKey = getCurrentKey();
+        let encrypted = caesarEncrypt(plaintext.trim(), currentKey);
         
         messages.push({
             id: Date.now(),
@@ -485,23 +442,21 @@
             encrypted: encrypted,
             original: plaintext.trim(),
             time: getTime(),
-            firstKeyUsed: firstKey,
-            secondKeyUsed: SECOND_SHIFT  // Store the fixed key for reference
+            keyUsed: currentKey
         });
         
-        // Update the encryption status bar
-        updateEncryptionStatus(encrypted, plaintext.trim(), firstKey);
+        // Update the encryption status bar with the last message
+        updateEncryptionStatus(encrypted, plaintext.trim(), currentKey);
         
         renderAll();
         return true;
     }
     
-    function updateEncryptionStatus(encryptedText, decryptedText, firstKey) {
+    function updateEncryptionStatus(encryptedText, decryptedText, key) {
         let encryptedPreview = encryptedText.length > 35 ? encryptedText.substring(0, 32) + '...' : encryptedText;
         let decryptedPreview = decryptedText.length > 35 ? decryptedText.substring(0, 32) + '...' : decryptedText;
         
-        let totalShift = (firstKey + SECOND_SHIFT) % 26;
-        document.getElementById('lastEncrypted').innerHTML = `"${encryptedPreview}" (first:${firstKey} + second:${SECOND_SHIFT} = total shift:${totalShift})`;
+        document.getElementById('lastEncrypted').innerHTML = `"${encryptedPreview}" (key ${key})`;
         document.getElementById('lastDecrypted').innerHTML = `"${decryptedPreview}"`;
     }
     
@@ -527,7 +482,7 @@
             container.innerHTML = `
                 <div style="text-align: center; color: #666; padding: 40px 20px; font-size: 0.8rem;">
                     💬 No messages yet<br>
-                    Enter first key (0-25) and start double-encrypted chatting!
+                    Enter a Caesar key (1-25) and start chatting!
                 </div>
             `;
             return;
@@ -538,11 +493,10 @@
         for (let msg of messages) {
             const isFromCurrentUser = (isAlice && msg.from === 'alice') || (!isAlice && msg.from === 'bob');
             const sender = msg.from === 'alice' ? 'Alice' : 'Bob';
-            const currentFirstKey = getCurrentFirstKey();
-            const totalShiftUsed = (msg.firstKeyUsed + SECOND_SHIFT) % 26;
+            const currentKey = getCurrentKey();
             
             if (isFromCurrentUser) {
-                // SENT MESSAGE - Show double-encrypted version
+                // SENT MESSAGE - Show encrypted version
                 let encryptedDisplay = msg.encrypted;
                 if (encryptedDisplay.length > 60) {
                     encryptedDisplay = encryptedDisplay.substring(0, 57) + '...';
@@ -552,32 +506,30 @@
                     <div class="message sent">
                         <div style="font-size: 0.7rem; opacity: 0.8; margin-bottom: 4px;">🔐 You → ${sender}</div>
                         <div style="font-family: monospace; font-size: 0.8rem; word-break: break-all;">${escapeHtml(encryptedDisplay)}</div>
-                        <div class="encrypted-preview">
-                            🔒 Double encrypted:<br>
-                            • First shift: ${msg.firstKeyUsed}<br>
-                            • Second shift: ${SECOND_SHIFT} (fixed)<br>
-                            • Total shift: ${totalShiftUsed}
-                        </div>
-                        <div class="message-time">${msg.time} • 🔒🔒 Double Caesar</div>
+                        <div class="encrypted-preview">🔑 Encrypted with key: ${msg.keyUsed}</div>
+                        <div class="message-time">${msg.time} • 🔒 Caesar Cipher</div>
                     </div>
                 `;
             } else {
-                // RECEIVED MESSAGE - Show double-decrypted version
-                let decrypted = doubleDecrypt(msg.encrypted, msg.firstKeyUsed);
-                let keyMismatch = (currentFirstKey !== msg.firstKeyUsed);
+                // RECEIVED MESSAGE - Show decrypted version (using the key it was encrypted with)
+                let decrypted;
+                let keyMismatch = false;
+                
+                // Try to decrypt with the original key first
+                decrypted = caesarDecrypt(msg.encrypted, msg.keyUsed);
+                
+                // Check if current key is different (for warning)
+                if (currentKey !== msg.keyUsed) {
+                    keyMismatch = true;
+                }
                 
                 html += `
                     <div class="message received">
                         <div style="font-size: 0.7rem; opacity: 0.8; margin-bottom: 4px;">${sender} → You</div>
                         <div>${escapeHtml(decrypted)}</div>
-                        <div class="encrypted-preview">
-                            🔓 Double decrypted:<br>
-                            • Reverse second shift: ${SECOND_SHIFT}<br>
-                            • Reverse first shift: ${msg.firstKeyUsed}<br>
-                            • Original message restored
-                        </div>
-                        ${keyMismatch ? `<div class="encrypted-preview" style="color: #ffaa66;">⚠️ Current first key (${currentFirstKey}) differs from message's first key (${msg.firstKeyUsed})</div>` : ''}
-                        <div class="message-time">${msg.time} • 🔓🔓 Double Caesar</div>
+                        ${keyMismatch ? `<div class="encrypted-preview" style="color: #ffaa66;">⚠️ Received with key ${msg.keyUsed} (current key: ${currentKey})</div>` : 
+                                        `<div class="encrypted-preview">🔓 Decrypted with key: ${msg.keyUsed}</div>`}
+                        <div class="message-time">${msg.time} • 🔓 Caesar Cipher</div>
                     </div>
                 `;
             }
@@ -604,7 +556,7 @@
         const sendAlice = document.getElementById('sendAliceBtn');
         const sendBob = document.getElementById('sendBobBtn');
         const resetBtn = document.getElementById('resetBtn');
-        const keyInput = document.getElementById('firstKey');
+        const keyInput = document.getElementById('caesarKey');
         
         function sendFromAlice() {
             if (aliceInput.value.trim()) {
@@ -646,14 +598,14 @@
         // Initial key display
         updateKeyDisplay();
         
-        // Demo message with double encryption explanation
+        // Demo message with explanation
         setTimeout(() => {
             if (messages.length === 0) {
-                let demoKey = getCurrentFirstKey();
-                let demoMessage = `Hello Bob! This is double-encrypted. First shift: ${demoKey}, Second shift: 10 (fixed)`;
-                sendMessage('alice', demoMessage);
+                let demoKey = getCurrentKey();
+                let demoEncrypted = caesarEncrypt("Hello Bob! This message uses Caesar cipher with key " + demoKey, demoKey);
+                sendMessage('alice', `Hello Bob! This message uses Caesar cipher with key ${demoKey}`);
                 setTimeout(() => {
-                    sendMessage('bob', `I received your double-encrypted message! To decrypt, I reverse second shift (10) then reverse first shift (${demoKey}). Pretty secure!`);
+                    sendMessage('bob', `I received your message! I can see it decrypted with key ${demoKey}`);
                 }, 800);
             }
         }, 500);
